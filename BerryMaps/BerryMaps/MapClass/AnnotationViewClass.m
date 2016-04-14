@@ -16,25 +16,43 @@
 - (void)setDragState:(MAAnnotationViewDragState)newDragState animated:(BOOL)animated{
     [super setDragState:newDragState animated:animated];
     if (newDragState == MAAnnotationViewDragStateStarting) {
-        _startDrag();
+        if (_startDrag) {
+            _startDrag();
+        }
+        
     }
     else if (newDragState == MAAnnotationViewDragStateDragging) {
-        _draging();
+        if (_draging) {
+            _draging();
+        }
+        
     }
     else if (newDragState == MAAnnotationViewDragStateEnding) {
-        _endDrag();
+        if (_endDrag) {
+            _endDrag();
+        }
+        
     }
 }
 
 - (void)configureDragStateBlockWithStart:(void(^)())startDrag draging:(void(^)())draging end:(void(^)())endDrag{
     [self setStartDrag:^{
-        startDrag();
+        if (startDrag) {
+            startDrag();
+        }
+        
     }];
     [self setDraging:^{
-        draging();
+        if (draging) {
+            draging();
+        }
+        
     }];
     [self setEndDrag:^{
-        endDrag();
+        if (endDrag) {
+            endDrag();
+        }
+        
     }];
 }
 @end
