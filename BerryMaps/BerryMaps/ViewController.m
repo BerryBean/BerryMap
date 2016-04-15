@@ -16,8 +16,9 @@
 #import <Realm/Realm.h>
 #import "AnnotationViewClass.h"
 #import <MBProgressHUD.h>
+#import "SearchTableViewController.h"
 static const CGFloat kBottomViewHeight = 200;
-@interface ViewController () <MAMapViewDelegate, CLLocationManagerDelegate, UIAlertViewDelegate>
+@interface ViewController () <MAMapViewDelegate, AMapSearchDelegate,CLLocationManagerDelegate, UIAlertViewDelegate>
 @property (nonatomic, strong) UIImageView *titleView;
 @property (nonatomic, strong) MAMapView *maMapView;
 @property (nonatomic, strong) CLLocationManager *locationManager;
@@ -30,6 +31,8 @@ static const CGFloat kBottomViewHeight = 200;
 @property (nonatomic, assign) BOOL      isBottomShow;
 @property (nonatomic, assign) BOOL      isEditMode;
 @property (nonatomic, strong) UITapGestureRecognizer *creatTap;
+@property (nonatomic, strong) AMapSearchAPI     *search;
+@property (nonatomic, strong) NSString          *myCity;
 @end
 
 @implementation ViewController
@@ -38,6 +41,7 @@ static const CGFloat kBottomViewHeight = 200;
     [super viewDidLoad];
     [self setupNavi];
     [self setupMap];
+    [self setupSearchServer];
     [self setupView];
     [self setupBottomView];
     [self configureBuildPointTap];
@@ -67,6 +71,14 @@ static const CGFloat kBottomViewHeight = 200;
     }];
     self.navigationItem.rightBarButtonItem = rightButton;
     
+    UIBarButtonItem *leftButton = [[UIBarButtonItem alloc] init];
+    @WeakObj(self)
+    [leftButton bk_initWithTitle:@"去哪儿" style:UIBarButtonItemStylePlain handler:^(id sender) {
+        @StrongObj(self)
+        [self showSearchInputAlert];
+        
+    }];
+    self.navigationItem.leftBarButtonItem = leftButton;
 }
 - (void)setupView{
     _showMeButton = [[UIButton alloc] initWithFrame:CGRectMake(20, self.view.bounds.size.height-100, 50, 50)];
@@ -120,7 +132,18 @@ static const CGFloat kBottomViewHeight = 200;
     
     
     [_locationManager startUpdatingLocation];
+    
 
+}
+- (void)setupSearchServer{
+    //配置用户Key
+    [AMapSearchServices sharedServices].apiKey = @"cca661f233e4d01fac6e27e1f98b6bf5";
+    
+    //初始化检索对象
+    _search = [[AMapSearchAPI alloc] init];
+    _search.delegate = self;
+    
+    
 }
 
 - (void)setupBottomView{
@@ -160,6 +183,28 @@ static const CGFloat kBottomViewHeight = 200;
     [self.bottomView configureModel:model];
     
 }
+- (void)showSearchInputAlert{
+    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"请输入目的地" message:@"" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"确定", nil];
+    [alertView setCancelButtonIndex:1];
+    [alertView setAlertViewStyle:UIAlertViewStylePlainTextInput];
+    [alertView bk_setDidDismissBlock:^(UIAlertView *alert, NSInteger index) {
+        if (index == 1) {
+            SearchTableViewController *tableVC = [[SearchTableViewController alloc] initWithKeyworks:[alertView textFieldAtIndex:0].text locationWithLat:_coordinate.latitude lon:_coordinate.longitude];
+            @WeakObj(self)
+            [tableVC setSelectedBlock:^(AMapPOI *poi) {
+                @StrongObj(self)
+                AMapGeoPoint *oriPoi = [AMapGeoPoint locationWithLatitude:_coordinate.latitude longitude:_coordinate.longitude];
+                [self searchRouteWithOrigin:oriPoi  destination:poi.location];
+            }];
+            [self.navigationController pushViewController:tableVC animated:YES];
+            
+        }
+
+    }];
+    
+    [alertView show];
+
+}
 - (void)configureBuildPointTap{
     _creatTap = [[UITapGestureRecognizer alloc] bk_initWithHandler:^(UIGestureRecognizer *sender, UIGestureRecognizerState state, CGPoint location) {
         if (_isEditMode) {
@@ -176,13 +221,18 @@ static const CGFloat kBottomViewHeight = 200;
             [alertView setCancelButtonIndex:1];
             [alertView setAlertViewStyle:UIAlertViewStylePlainTextInput];
             [alertView bk_setDidDismissBlock:^(UIAlertView *alert, NSInteger index) {
-                pointAnn.title = [alertView textFieldAtIndex:0].text;
-                RLMRealm *realm = [RLMRealm defaultRealm];
-                [realm transactionWithBlock:^{
-                    model.name = [alertView textFieldAtIndex:0].text;
-                    
-                }];
-                [self showAllTextDialog:@"建桩成功"];
+                if (index == 1) {
+                    pointAnn.title = [alertView textFieldAtIndex:0].text;
+                    RLMRealm *realm = [RLMRealm defaultRealm];
+                    [realm transactionWithBlock:^{
+                        model.name = [alertView textFieldAtIndex:0].text;
+                        
+                    }];
+                    [self showAllTextDialog:@"建桩成功"];
+                }
+                else if (index == 0){
+                    [_maMapView removeAnnotation:pointAnn];
+                }
             }];
             
             [alertView show];
@@ -194,7 +244,75 @@ static const CGFloat kBottomViewHeight = 200;
     
     
 }
--(void)showAllTextDialog:(NSString *)str
+- (void)searchRouteWithOrigin:(AMapGeoPoint *)origin destination:(AMapGeoPoint *)destination{
+    
+    NSLog(@"destination:lat:%f, lon:%f",destination.latitude,destination.longitude);
+    NSLog(@"origin:lat:%f, lon:%f",origin.latitude,origin.longitude);
+    //构造AMapDrivingRouteSearchRequest对象，设置驾车路径规划请求参数
+    AMapDrivingRouteSearchRequest *request = [[AMapDrivingRouteSearchRequest alloc] init];
+    request.origin = origin;
+    request.destination = destination;
+    request.strategy = 2;//距离优先
+    request.requireExtension = YES;
+    
+    //发起路径搜索
+    [_search AMapDrivingRouteSearch: request];
+    
+    AMapWalkingRouteSearchRequest *requestW = [[AMapWalkingRouteSearchRequest alloc] init];
+    requestW.origin = origin;
+    requestW.destination = destination;
+    [_search AMapWalkingRouteSearch: requestW];
+    
+    AMapBusLineNameSearchRequest *lineRequest = [[AMapBusLineNameSearchRequest alloc] init];
+    lineRequest.keywords = @"445";
+    lineRequest.city = @"beijing";
+    lineRequest.requireExtension = YES;
+    
+    //发起公交线路查询
+    [_search AMapBusLineNameSearch:lineRequest];
+}
+#pragma mark - 实现公交线路查询的回调函数
+-(void)onBusLineSearchDone:(AMapBusLineBaseSearchRequest*)request response:(AMapBusLineSearchResponse *)response
+{
+    if(response.buslines.count == 0)
+    {
+        return;
+    }
+    
+    //通过AMapBusLineSearchResponse对象处理搜索结果
+    NSString *strCount = [NSString stringWithFormat:@"count: %ld",(long)response.count];
+    NSString *strSuggestion = [NSString stringWithFormat:@"Suggestion: %@", response.suggestion];
+    NSString *strLine = @"";
+    for (AMapBusLine *p in response.buslines) {
+        strLine = [NSString stringWithFormat:@"%@\nLine: %@", strLine, p.description];
+    }
+    NSString *result = [NSString stringWithFormat:@"%@ \n %@ \n %@", strCount, strSuggestion, strLine];
+    NSLog(@"Line: %@", result);
+}
+#pragma mark - 实现路径搜索的回调函数
+- (void)onRouteSearchDone:(AMapRouteSearchBaseRequest *)request response:(AMapRouteSearchResponse *)response
+{
+    if(response.route == nil)
+    {
+        return;
+    }
+    //通过AMapNavigationSearchResponse对象处理搜索结果
+    NSString *route = [NSString stringWithFormat:@"Navi: %@", response.route];
+    NSLog(@"%@", route);
+    NSArray *arr = response.route.paths;
+    for (AMapPath *path in arr) {
+        for (AMapStep *step in path.steps) {
+//            MAPolyline *commonPolyline = [MAPolyline polylineWithCoordinates:<#(CLLocationCoordinate2D *)#> count:<#(NSUInteger)#>];
+//            [_maMapView addOverlay: commonPolyline];
+            
+        }
+    }
+}
+- (void)AMapSearchRequest:(id)request didFailWithError:(NSError *)error{
+    NSLog(@"%@",error);
+}
+#pragma mark - 显示toast
+- (void)showAllTextDialog:(NSString *)str
 {
     MBProgressHUD *hud = [[MBProgressHUD alloc] initWithView:self.view];
     [self.view addSubview:hud];
@@ -208,6 +326,7 @@ static const CGFloat kBottomViewHeight = 200;
     }];
     
 }
+
 #pragma mark - action
 - (void)showMe:(UIButton *)sender{
     MACoordinateSpan span = MACoordinateSpanMake(0.1, 0.1);
@@ -235,6 +354,8 @@ static const CGFloat kBottomViewHeight = 200;
     [self showPointWithCoordinate:coordinate title:@"当前位置" subtitle:nil model:nil];
     [self showMe:self.showMeButton];
     
+    
+    
 }
 - (void)mapView:(MAMapView *)mapView didFailToLocateUserWithError:(NSError *)error{
 
@@ -243,24 +364,40 @@ static const CGFloat kBottomViewHeight = 200;
 }
 
 - (void)mapView:(MAMapView *)mapView didSelectAnnotationView:(MAAnnotationView *)view{
-
-}
-- (MAOverlayRenderer *)mapView:(MAMapView *)mapView rendererForOverlay:(id <MAOverlay>)overlay
-{
-    /* 自定义定位精度对应的MACircleView. */
-    if (overlay == mapView.userLocationAccuracyCircle)
-    {
-        MACircleRenderer *accuracyCircleRenderer = [[MACircleRenderer alloc] initWithCircle:overlay];
-        
-        accuracyCircleRenderer.lineWidth    = 2.f;
-        accuracyCircleRenderer.strokeColor  = [UIColor lightGrayColor];
-        accuracyCircleRenderer.fillColor    = [UIColor colorWithRed:1 green:0 blue:0 alpha:.3];
-        
-        return accuracyCircleRenderer;
-    }
     
+}
+- (MAOverlayView *)mapView:(MAMapView *)mapView viewForOverlay:(id <MAOverlay>)overlay
+{
+    if ([overlay isKindOfClass:[MAPolyline class]])
+    {
+        MAPolylineView *polylineView = [[MAPolylineView alloc] initWithPolyline:overlay];
+        
+        polylineView.lineWidth = 10.f;
+        polylineView.strokeColor = [UIColor colorWithRed:0 green:0 blue:1 alpha:0.6];
+        polylineView.lineJoinType = kMALineJoinRound;//连接类型
+        polylineView.lineCapType = kMALineCapRound;//端点类型
+        
+        return polylineView;
+    }
     return nil;
 }
+
+//- (MAOverlayRenderer *)mapView:(MAMapView *)mapView rendererForOverlay:(id <MAOverlay>)overlay
+//{
+//    /* 自定义定位精度对应的MACircleView. */
+//    if (overlay == mapView.userLocationAccuracyCircle)
+//    {
+//        MACircleRenderer *accuracyCircleRenderer = [[MACircleRenderer alloc] initWithCircle:overlay];
+//        
+//        accuracyCircleRenderer.lineWidth    = 2.f;
+//        accuracyCircleRenderer.strokeColor  = [UIColor lightGrayColor];
+//        accuracyCircleRenderer.fillColor    = [UIColor colorWithRed:1 green:0 blue:0 alpha:.3];
+//        
+//        return accuracyCircleRenderer;
+//    }
+//    
+//    return nil;
+//}
 
 - (MAAnnotationView *)mapView:(MAMapView *)mapView viewForAnnotation:(id <MAAnnotation>)annotation
 {

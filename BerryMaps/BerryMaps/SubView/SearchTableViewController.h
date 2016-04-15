@@ -10,6 +10,6 @@
 #import <AMapSearchKit/AMapSearchKit.h>
 
 @interface SearchTableViewController : UITableViewController
-@property (nonatomic, copy) void (^searchBlock)(AMapPOI *model);
-- (void)searchWithKeyworks:(NSString *)keyworks locationWithLat:(float)lat lon:(float)lon;
+@property (nonatomic, copy) void (^selectedBlock)(AMapPOI *model);
+- (instancetype)initWithKeyworks:(NSString *)keyworks locationWithLat:(double)lat lon:(double)lon;
 @end
