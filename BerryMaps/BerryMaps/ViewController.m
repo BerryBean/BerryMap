@@ -17,14 +17,16 @@
 #import "AnnotationViewClass.h"
 #import <MBProgressHUD.h>
 #import "SearchTableViewController.h"
+#import "CommonUtility.h"
 static const CGFloat kBottomViewHeight = 200;
 @interface ViewController () <MAMapViewDelegate, AMapSearchDelegate,CLLocationManagerDelegate, UIAlertViewDelegate>
 @property (nonatomic, strong) UIImageView *titleView;
 @property (nonatomic, strong) MAMapView *maMapView;
 @property (nonatomic, strong) CLLocationManager *locationManager;
 @property (nonatomic, assign) CLLocationCoordinate2D coordinate;
-@property (nonatomic, strong) UIButton *showMeButton;
-@property (nonatomic, strong) UIButton    *showTrafficButton;
+@property (nonatomic, strong) UIButton      *showMeButton;
+@property (nonatomic, strong) UIButton      *showTrafficButton;
+@property (nonatomic, strong) UIButton      *showGoWhereButton;
 @property (nonatomic, strong) MAUserLocation *meLocation;
 @property (nonatomic, strong) NSArray   *dataArr;
 @property (nonatomic, strong) BottomView    *bottomView;
@@ -33,6 +35,7 @@ static const CGFloat kBottomViewHeight = 200;
 @property (nonatomic, strong) UITapGestureRecognizer *creatTap;
 @property (nonatomic, strong) AMapSearchAPI     *search;
 @property (nonatomic, strong) NSString          *myCity;
+@property (nonatomic, strong) NSMutableArray    *overlayArr;
 @end
 
 @implementation ViewController
@@ -95,6 +98,16 @@ static const CGFloat kBottomViewHeight = 200;
     }];
     [self.view addSubview:_showTrafficButton];
     
+    _showGoWhereButton = [[UIButton alloc] initWithFrame:CGRectMake(20, self.view.bounds.size.height-150, 50, 50)];
+    [_showGoWhereButton setImage:[UIImage imageNamed:@"ic_tab_me"] forState:UIControlStateNormal];
+    @WeakObj(self)
+    [_showGoWhereButton bk_whenTapped:^{
+        @StrongObj(self)
+        [self showSearchInputAlert];
+    }];
+    [self.view addSubview:_showGoWhereButton];
+    
+    
     
     
 }
@@ -156,6 +169,8 @@ static const CGFloat kBottomViewHeight = 200;
     }];
     [self.view addSubview:self.bottomView];
     _isBottomShow = NO;
+    
+    
 }
 - (void)hideBottomView{
     if (_isBottomShow) {
@@ -181,6 +196,14 @@ static const CGFloat kBottomViewHeight = 200;
     
     _isBottomShow = YES;
     [self.bottomView configureModel:model];
+    @WeakObj(self)
+    [self.bottomView setGoBlock:^{
+        @StrongObj(self)
+        AMapGeoPoint *oriPoi = [AMapGeoPoint locationWithLatitude:self.coordinate.latitude longitude:self.coordinate.longitude];
+        NSArray *stringList = [model.coordinate componentsSeparatedByString:@","];
+        AMapGeoPoint *desPoi = [AMapGeoPoint locationWithLatitude:[stringList[1] floatValue] longitude:[stringList[0] floatValue]];
+        [self searchRouteWithOrigin:oriPoi  destination:desPoi];
+    }];
     
 }
 - (void)showSearchInputAlert{
@@ -258,18 +281,18 @@ static const CGFloat kBottomViewHeight = 200;
     //发起路径搜索
     [_search AMapDrivingRouteSearch: request];
     
-    AMapWalkingRouteSearchRequest *requestW = [[AMapWalkingRouteSearchRequest alloc] init];
-    requestW.origin = origin;
-    requestW.destination = destination;
-    [_search AMapWalkingRouteSearch: requestW];
+//    AMapWalkingRouteSearchRequest *requestW = [[AMapWalkingRouteSearchRequest alloc] init];
+//    requestW.origin = origin;
+//    requestW.destination = destination;
+//    [_search AMapWalkingRouteSearch: requestW];
     
-    AMapBusLineNameSearchRequest *lineRequest = [[AMapBusLineNameSearchRequest alloc] init];
-    lineRequest.keywords = @"445";
-    lineRequest.city = @"beijing";
-    lineRequest.requireExtension = YES;
-    
-    //发起公交线路查询
-    [_search AMapBusLineNameSearch:lineRequest];
+//    AMapBusLineNameSearchRequest *lineRequest = [[AMapBusLineNameSearchRequest alloc] init];
+//    lineRequest.keywords = @"445";
+//    lineRequest.city = @"beijing";
+//    lineRequest.requireExtension = YES;
+//    
+//    //发起公交线路查询
+//    [_search AMapBusLineNameSearch:lineRequest];
 }
 #pragma mark - 实现公交线路查询的回调函数
 -(void)onBusLineSearchDone:(AMapBusLineBaseSearchRequest*)request response:(AMapBusLineSearchResponse *)response
@@ -296,17 +319,26 @@ static const CGFloat kBottomViewHeight = 200;
     {
         return;
     }
+    [_maMapView removeOverlays:_overlayArr];
+    _overlayArr = [[NSMutableArray alloc] init];
     //通过AMapNavigationSearchResponse对象处理搜索结果
     NSString *route = [NSString stringWithFormat:@"Navi: %@", response.route];
     NSLog(@"%@", route);
     NSArray *arr = response.route.paths;
-    for (AMapPath *path in arr) {
+    if (arr.count > 0) {
+        AMapPath *path = arr[0];
         for (AMapStep *step in path.steps) {
-//            MAPolyline *commonPolyline = [MAPolyline polylineWithCoordinates:<#(CLLocationCoordinate2D *)#> count:<#(NSUInteger)#>];
-//            [_maMapView addOverlay: commonPolyline];
+            NSUInteger count = 0;
+            CLLocationCoordinate2D *coordinates = [CommonUtility coordinatesForString:step.polyline coordinateCount:&count parseToken:@";"];
+            MAPolyline *commonPolyline = [MAPolyline polylineWithCoordinates:coordinates count:count];
+            [_overlayArr addObject:commonPolyline];
+            [_maMapView addOverlay: commonPolyline];
+            
             
         }
     }
+    
+//    }
 }
 - (void)AMapSearchRequest:(id)request didFailWithError:(NSError *)error{
     NSLog(@"%@",error);
@@ -351,7 +383,7 @@ static const CGFloat kBottomViewHeight = 200;
     NSLog(@"我的坐标位置：%f, %f", coordinate.longitude, coordinate.latitude);
     
     _maMapView.showsUserLocation = NO;
-    [self showPointWithCoordinate:coordinate title:@"当前位置" subtitle:nil model:nil];
+    [self showPointWithCoordinate:_coordinate title:@"当前位置" subtitle:nil model:nil];
     [self showMe:self.showMeButton];
     
     
@@ -372,7 +404,7 @@ static const CGFloat kBottomViewHeight = 200;
     {
         MAPolylineView *polylineView = [[MAPolylineView alloc] initWithPolyline:overlay];
         
-        polylineView.lineWidth = 10.f;
+        polylineView.lineWidth = 6.f;
         polylineView.strokeColor = [UIColor colorWithRed:0 green:0 blue:1 alpha:0.6];
         polylineView.lineJoinType = kMALineJoinRound;//连接类型
         polylineView.lineCapType = kMALineCapRound;//端点类型

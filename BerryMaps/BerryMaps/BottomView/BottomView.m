@@ -14,6 +14,7 @@
 @property (nonatomic, strong) UILabel *titleLabel;
 @property (nonatomic, strong) UILabel *address;
 @property (nonatomic, strong) UIButton *closeButton;
+@property (nonatomic, strong) UILabel *goLabel;
 @end
 
 @implementation BottomView
@@ -39,6 +40,17 @@
     }];
     [self addSubview:self.closeButton];
     
+    self.goLabel = [[UILabel alloc] init];
+    self.goLabel.text = @"去这里";
+    self.goLabel.userInteractionEnabled = YES;
+    [self.goLabel bk_whenTapped:^{
+        if (_goBlock) {
+            _goBlock();
+        }
+        
+    }];
+    [self addSubview:self.goLabel];
+    
     [self.titleLabel mas_makeConstraints:^(MASConstraintMaker *make) {
         make.top.equalTo(self).offset(10);
         make.height.equalTo(@(30));
@@ -54,6 +66,12 @@
         make.top.equalTo(self).offset(10);
         make.right.equalTo(self).offset(10);
         make.height.width.equalTo(@(30));
+    }];
+    
+    [self.goLabel mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.equalTo(self.address.mas_bottom).offset(20);
+        make.left.equalTo(self.address);
+        make.height.equalTo(@(30));
     }];
 }
 - (void)configureModel:(ChargingNetModel*)model{

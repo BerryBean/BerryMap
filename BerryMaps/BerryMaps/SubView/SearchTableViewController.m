@@ -119,6 +119,7 @@ static NSString *cellIdentifier = @"cellIdentifier";
     if (_selectedBlock) {
         _selectedBlock(pointModel);
     }
+    [self.navigationController popViewControllerAnimated:YES];
 }
 
 - (void)onPOISearchDone:(AMapPOISearchBaseRequest *)request response:(AMapPOISearchResponse *)response

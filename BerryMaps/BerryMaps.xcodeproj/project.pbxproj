@@ -18,6 +18,7 @@
 		CC4173C51CB5F1F20041EB9A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CC4173C31CB5F1F20041EB9A /* LaunchScreen.storyboard */; };
 		CC83E5011CBF80FF003D6369 /* SearchTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = CC83E5001CBF80FF003D6369 /* SearchTableViewController.m */; };
 		CC83E5041CBF86E5003D6369 /* MapPointModel.m in Sources */ = {isa = PBXBuildFile; fileRef = CC83E5031CBF86E5003D6369 /* MapPointModel.m */; };
+		CC83E5071CC0DA3A003D6369 /* CommonUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = CC83E5061CC0DA3A003D6369 /* CommonUtility.m */; };
 		CC8A60BF1CBC07DD0052EB59 /* DataDao.m in Sources */ = {isa = PBXBuildFile; fileRef = CC8A60BE1CBC07DD0052EB59 /* DataDao.m */; };
 		CC8A60C31CBC9B780052EB59 /* PoinAnnotationClass.m in Sources */ = {isa = PBXBuildFile; fileRef = CC8A60C21CBC9B780052EB59 /* PoinAnnotationClass.m */; };
 		CCA935F61CBA7D59009F252B /* DataManager.m in Sources */ = {isa = PBXBuildFile; fileRef = CCA935F51CBA7D59009F252B /* DataManager.m */; };
@@ -46,6 +47,8 @@
 		CC83E5001CBF80FF003D6369 /* SearchTableViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SearchTableViewController.m; sourceTree = "<group>"; };
 		CC83E5021CBF86E5003D6369 /* MapPointModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MapPointModel.h; sourceTree = "<group>"; };
 		CC83E5031CBF86E5003D6369 /* MapPointModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MapPointModel.m; sourceTree = "<group>"; };
+		CC83E5051CC0DA3A003D6369 /* CommonUtility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CommonUtility.h; sourceTree = "<group>"; };
+		CC83E5061CC0DA3A003D6369 /* CommonUtility.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CommonUtility.m; sourceTree = "<group>"; };
 		CC8A60BD1CBC07DD0052EB59 /* DataDao.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DataDao.h; sourceTree = "<group>"; };
 		CC8A60BE1CBC07DD0052EB59 /* DataDao.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DataDao.m; sourceTree = "<group>"; };
 		CC8A60C11CBC9B780052EB59 /* PoinAnnotationClass.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PoinAnnotationClass.h; sourceTree = "<group>"; };
@@ -166,6 +169,8 @@
 		CCA935F31CBA7D3E009F252B /* DataManager */ = {
 			isa = PBXGroup;
 			children = (
+				CC83E5051CC0DA3A003D6369 /* CommonUtility.h */,
+				CC83E5061CC0DA3A003D6369 /* CommonUtility.m */,
 				CCA935F41CBA7D59009F252B /* DataManager.h */,
 				CCA935F51CBA7D59009F252B /* DataManager.m */,
 				CC8A60BD1CBC07DD0052EB59 /* DataDao.h */,
@@ -310,6 +315,7 @@
 				CC2FD0F31CBDE8460036C0E2 /* AnnotationViewClass.m in Sources */,
 				CC4173BD1CB5F1F20041EB9A /* ViewController.m in Sources */,
 				CCA935FA1CBA80B7009F252B /* ChargingNetModel.m in Sources */,
+				CC83E5071CC0DA3A003D6369 /* CommonUtility.m in Sources */,
 				CC83E5011CBF80FF003D6369 /* SearchTableViewController.m in Sources */,
 				CC8A60BF1CBC07DD0052EB59 /* DataDao.m in Sources */,
 				CCA935F61CBA7D59009F252B /* DataManager.m in Sources */,

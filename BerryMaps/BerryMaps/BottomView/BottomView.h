@@ -10,7 +10,8 @@
 #import "ChargingNetModel.h"
 
 @interface BottomView : UIView
-@property (nonatomic, strong) void(^closeBlock)() ;
+@property (nonatomic, strong)   void(^closeBlock)();
+@property (nonatomic, copy)     void(^goBlock)();
 -(instancetype)initWithFrame:(CGRect)frame;
 - (void)configureModel:(ChargingNetModel*)model;
 @end
