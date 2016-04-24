@@ -12,6 +12,8 @@
 @interface BottomView : UIView
 @property (nonatomic, strong)   void(^closeBlock)();
 @property (nonatomic, copy)     void(^goBlock)();
+@property (nonatomic, copy)     void(^wayBlock)();
 -(instancetype)initWithFrame:(CGRect)frame;
 - (void)configureModel:(ChargingNetModel*)model;
+- (void)updateDistance:(NSInteger)distance;
 @end

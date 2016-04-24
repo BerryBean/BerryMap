@@ -36,6 +36,7 @@ static const CGFloat kBottomViewHeight = 200;
 @property (nonatomic, strong) AMapSearchAPI     *search;
 @property (nonatomic, strong) NSString          *myCity;
 @property (nonatomic, strong) NSMutableArray    *overlayArr;
+@property (nonatomic, strong) AMapGeoPoint      *desPoi;
 @end
 
 @implementation ViewController
@@ -202,7 +203,16 @@ static const CGFloat kBottomViewHeight = 200;
         AMapGeoPoint *oriPoi = [AMapGeoPoint locationWithLatitude:self.coordinate.latitude longitude:self.coordinate.longitude];
         NSArray *stringList = [model.coordinate componentsSeparatedByString:@","];
         AMapGeoPoint *desPoi = [AMapGeoPoint locationWithLatitude:[stringList[1] floatValue] longitude:[stringList[0] floatValue]];
-        [self searchRouteWithOrigin:oriPoi  destination:desPoi];
+        self.desPoi = desPoi;
+        [self searchRouteWithOrigin:oriPoi  destination:desPoi waypoints:nil];
+    }];
+    [self.bottomView setWayBlock:^{
+        @StrongObj(self)
+        AMapGeoPoint *oriPoi = [AMapGeoPoint locationWithLatitude:self.coordinate.latitude longitude:self.coordinate.longitude];
+        NSArray *stringList = [model.coordinate componentsSeparatedByString:@","];
+        AMapGeoPoint *wayPoi = [AMapGeoPoint locationWithLatitude:[stringList[1] floatValue] longitude:[stringList[0] floatValue]];
+        NSArray *poiArr = @[wayPoi];
+        [self searchRouteWithOrigin:oriPoi  destination:self.desPoi waypoints:poiArr];
     }];
     
 }
@@ -216,8 +226,10 @@ static const CGFloat kBottomViewHeight = 200;
             @WeakObj(self)
             [tableVC setSelectedBlock:^(AMapPOI *poi) {
                 @StrongObj(self)
+                
                 AMapGeoPoint *oriPoi = [AMapGeoPoint locationWithLatitude:_coordinate.latitude longitude:_coordinate.longitude];
-                [self searchRouteWithOrigin:oriPoi  destination:poi.location];
+                self.desPoi = poi.location;
+                [self searchRouteWithOrigin:oriPoi  destination:poi.location waypoints:nil];
             }];
             [self.navigationController pushViewController:tableVC animated:YES];
             
@@ -267,12 +279,13 @@ static const CGFloat kBottomViewHeight = 200;
     
     
 }
-- (void)searchRouteWithOrigin:(AMapGeoPoint *)origin destination:(AMapGeoPoint *)destination{
+- (void)searchRouteWithOrigin:(AMapGeoPoint *)origin destination:(AMapGeoPoint *)destination waypoints:(NSArray *)waypoints{
     
     NSLog(@"destination:lat:%f, lon:%f",destination.latitude,destination.longitude);
     NSLog(@"origin:lat:%f, lon:%f",origin.latitude,origin.longitude);
     //构造AMapDrivingRouteSearchRequest对象，设置驾车路径规划请求参数
     AMapDrivingRouteSearchRequest *request = [[AMapDrivingRouteSearchRequest alloc] init];
+    request.waypoints = waypoints;
     request.origin = origin;
     request.destination = destination;
     request.strategy = 2;//距离优先
@@ -327,6 +340,7 @@ static const CGFloat kBottomViewHeight = 200;
     NSArray *arr = response.route.paths;
     if (arr.count > 0) {
         AMapPath *path = arr[0];
+        [self.bottomView updateDistance:path.distance];
         for (AMapStep *step in path.steps) {
             NSUInteger count = 0;
             CLLocationCoordinate2D *coordinates = [CommonUtility coordinatesForString:step.polyline coordinateCount:&count parseToken:@";"];
@@ -455,11 +469,9 @@ static const CGFloat kBottomViewHeight = 200;
             UIImage *pointImage = [UIImage imageNamed:@"ic_home_other"];
             annotationView.image = pointImage;
             [annotationView configureDragStateBlockWithStart:^{
-//                annotationView.centerOffset = CGPointMake(0, -18);
             } draging:^{
                 
             } end:^{
-//                annotationView.centerOffset = CGPointMake(0, 18);
                 NSString *locaString = [NSString stringWithFormat:@"%f,%f",myAnnotation.coordinate.longitude,myAnnotation.coordinate.latitude];
                 NSLog(@"%@",locaString);
                 RLMRealm *realm = [RLMRealm defaultRealm];
