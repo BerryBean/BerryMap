@@ -18,6 +18,7 @@
 @property (nonatomic, strong) UILabel *stateLabel;
 @property (nonatomic, strong) UILabel *wayLabel;
 @property (nonatomic, strong) UILabel *distanceLabel;
+@property (nonatomic, strong) UILabel *verifyLabel;
 @end
 
 @implementation BottomView
@@ -71,6 +72,16 @@
     self.distanceLabel = [[UILabel alloc] init];
     [self addSubview:self.distanceLabel];
     
+    self.verifyLabel = [[UILabel alloc] init];
+    self.verifyLabel.text = @"未审核";
+    self.verifyLabel.userInteractionEnabled = YES;
+    [self.verifyLabel bk_whenTapped:^{
+        if (_verifyBlock) {
+            _verifyBlock();
+        }
+    }];
+    [self addSubview:self.verifyLabel];
+    
     [self.titleLabel mas_makeConstraints:^(MASConstraintMaker *make) {
         make.top.equalTo(self).offset(10);
         make.height.equalTo(@(30));
@@ -111,10 +122,20 @@
         make.left.equalTo(self.stateLabel.mas_right).offset(20);
         make.height.equalTo(@(30));
     }];
+    
+    [self.verifyLabel mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.equalTo(self.wayLabel);
+        make.left.equalTo(self.wayLabel.mas_right).offset(20);
+        make.height.equalTo(@(30));
+    }];
 }
 - (void)configureModel:(ChargingNetModel*)model{
     self.titleLabel.text = model.name;
     self.address.text = model.address;
+    if (model.verifyNum > 0) {
+        self.verifyLabel.text = [NSString stringWithFormat:@"可靠率%.2lf%%",(double)model.verifyNum/(model.verifyNum+model.noVerifyNum)*100];
+
+    }
     if (model.isUserType) {
         self.address.text = @"审核中……";
     }
@@ -130,7 +151,13 @@
         self.stateLabel.text = [NSString stringWithFormat:@"是否可用：%@",state];
 
     }
-
+    
+}
+- (void)updateVerifyNum:(ChargingNetModel*)model{
+    if (model.verifyNum > 0) {
+        self.verifyLabel.text = [NSString stringWithFormat:@"可靠率%.2lf%%",(double)model.verifyNum/(model.verifyNum+model.noVerifyNum)*100];
+        
+    }
 }
 - (void)updateDistance:(NSInteger)distance{
     self.distanceLabel.text = [NSString stringWithFormat:@"距离%ld米",(long)distance];

@@ -13,7 +13,9 @@
 @property (nonatomic, strong)   void(^closeBlock)();
 @property (nonatomic, copy)     void(^goBlock)();
 @property (nonatomic, copy)     void(^wayBlock)();
+@property (nonatomic, copy)     void(^verifyBlock)();
 -(instancetype)initWithFrame:(CGRect)frame;
 - (void)configureModel:(ChargingNetModel*)model;
 - (void)updateDistance:(NSInteger)distance;
+- (void)updateVerifyNum:(ChargingNetModel*)model;
 @end

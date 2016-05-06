@@ -31,6 +31,9 @@
 @property (nonatomic, assign) NSInteger    charge_station_id;
 @property (nonatomic, assign) NSInteger    _id;
 @property (nonatomic, assign) BOOL      isUserType;
+@property (nonatomic, assign) NSInteger verifyNum;
+@property (nonatomic, assign) NSInteger noVerifyNum;
+
 @end
 RLM_ARRAY_TYPE(ChargingNetModel)
 

@@ -214,14 +214,37 @@ static const CGFloat kBottomViewHeight = 200;
         NSArray *poiArr = @[wayPoi];
         [self searchRouteWithOrigin:oriPoi  destination:self.desPoi waypoints:poiArr];
     }];
+    [self.bottomView setVerifyBlock:^{
+        @StrongObj(self)
+        UIAlertView *alert = [[UIAlertView alloc] bk_initWithTitle:@"审核充电桩" message:@"是否真实？"];
+        [alert bk_addButtonWithTitle:@"是" handler:^{
+            RLMRealm *realm = [RLMRealm defaultRealm];
+            [realm transactionWithBlock:^{
+                model.verifyNum += 1;
+                
+            }];
+            [self.bottomView updateVerifyNum:model];
+        }];
+        [alert bk_addButtonWithTitle:@"否" handler:^{
+            RLMRealm *realm = [RLMRealm defaultRealm];
+            [realm transactionWithBlock:^{
+                model.noVerifyNum += 1;
+            }];
+            [self.bottomView updateVerifyNum:model];
+        }];
+        [alert show];
+        
+        
+        
+    }];
     
 }
 - (void)showSearchInputAlert{
     UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"请输入目的地" message:@"" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"确定", nil];
-    [alertView setCancelButtonIndex:1];
+    [alertView setCancelButtonIndex:0];
     [alertView setAlertViewStyle:UIAlertViewStylePlainTextInput];
     [alertView bk_setDidDismissBlock:^(UIAlertView *alert, NSInteger index) {
-        if (index == 1) {
+        if (index == 0) {
             SearchTableViewController *tableVC = [[SearchTableViewController alloc] initWithKeyworks:[alertView textFieldAtIndex:0].text locationWithLat:_coordinate.latitude lon:_coordinate.longitude];
             @WeakObj(self)
             [tableVC setSelectedBlock:^(AMapPOI *poi) {
@@ -253,10 +276,10 @@ static const CGFloat kBottomViewHeight = 200;
             pointAnn.model = model;
             [_maMapView addAnnotation:pointAnn];
             UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"请输入电桩名字" message:@"" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"确定", nil];
-            [alertView setCancelButtonIndex:1];
+            [alertView setCancelButtonIndex:0];
             [alertView setAlertViewStyle:UIAlertViewStylePlainTextInput];
             [alertView bk_setDidDismissBlock:^(UIAlertView *alert, NSInteger index) {
-                if (index == 1) {
+                if (index == 0) {
                     pointAnn.title = [alertView textFieldAtIndex:0].text;
                     RLMRealm *realm = [RLMRealm defaultRealm];
                     [realm transactionWithBlock:^{
@@ -265,7 +288,7 @@ static const CGFloat kBottomViewHeight = 200;
                     }];
                     [self showAllTextDialog:@"建桩成功"];
                 }
-                else if (index == 0){
+                else if (index == 1){
                     [_maMapView removeAnnotation:pointAnn];
                 }
             }];
@@ -288,7 +311,7 @@ static const CGFloat kBottomViewHeight = 200;
     request.waypoints = waypoints;
     request.origin = origin;
     request.destination = destination;
-    request.strategy = 2;//距离优先
+    request.strategy = 4;//距离优先
     request.requireExtension = YES;
     
     //发起路径搜索

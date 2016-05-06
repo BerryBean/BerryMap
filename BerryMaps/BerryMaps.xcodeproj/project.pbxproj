@@ -128,7 +128,6 @@
 				CC4173B91CB5F1F20041EB9A /* AppDelegate.m */,
 				CC4173BB1CB5F1F20041EB9A /* ViewController.h */,
 				CC4173BC1CB5F1F20041EB9A /* ViewController.m */,
-				CC2FD0F01CBCD7900036C0E2 /* PrefixHeader.pch */,
 				CC4173BE1CB5F1F20041EB9A /* Main.storyboard */,
 				CC4173C11CB5F1F20041EB9A /* Assets.xcassets */,
 				CC4173C31CB5F1F20041EB9A /* LaunchScreen.storyboard */,
@@ -141,6 +140,7 @@
 		CC4173B51CB5F1F20041EB9A /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				CC2FD0F01CBCD7900036C0E2 /* PrefixHeader.pch */,
 				CC4173B61CB5F1F20041EB9A /* main.m */,
 			);
 			name = "Supporting Files";
@@ -224,7 +224,7 @@
 				TargetAttributes = {
 					CC4173B11CB5F1F10041EB9A = {
 						CreatedOnToolsVersion = 7.3;
-						DevelopmentTeam = 4HRX9LYRH4;
+						DevelopmentTeam = B84CZ4YJHC;
 					};
 				};
 			};
@@ -437,7 +437,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: 369251823@qq.com (QB95AFTCE9)";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = BerryMaps/PrefixHeader.pch;
 				INFOPLIST_FILE = BerryMaps/Info.plist;
